@@ -238,7 +238,6 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
   local out = vim.fn.system { 'git', 'clone', '--filter=blob:none', '--branch=stable', lazyrepo, lazypath }
   if vim.v.shell_error ~= 0 then error('Error cloning lazy.nvim:\n' .. out) end
 end
-
 ---@type vim.Option
 local rtp = vim.opt.rtp
 rtp:prepend(lazypath)
@@ -257,7 +256,115 @@ rtp:prepend(lazypath)
 require('lazy').setup({
   -- NOTE: Plugins can be added via a link or github org/name. To run setup automatically, use `opts = {}`
   { 'NMAC427/guess-indent.nvim', opts = {} },
+  { 'tpope/vim-commentary', event = 'VeryLazy' },
+  { 'neovim/nvim-lspconfig', opts = {} },
+  {
+    'hrsh7th/nvim-cmp',
+    dependencies = {
+      'hrsh7th/cmp-nvim-lsp',
+      'hrsh7th/cmp-buffer',
+      'hrsh7th/cmp-path',
+      'hrsh7th/cmp-cmdline',
+      'L3MON4D3/LuaSnip',
+    },
+    config = function()
+      local cmp = require 'cmp'
+      cmp.setup {
+        completion = { completeopt = 'menu,menuone,noselect' },
+        mapping = cmp.mapping.preset.insert {
+          ['<C-n>'] = cmp.mapping.select_next_item(),
+          ['<C-p>'] = cmp.mapping.select_prev_item(),
+          ['<CR>'] = cmp.mapping.confirm { select = true },
+        },
+        sources = cmp.config.sources {
+          { name = 'nvim_lsp' },
+          { name = 'buffer' },
+          { name = 'path' },
+        },
+      }
+    end,
+  },
+  {
+    'nvimdev/dashboard-nvim',
+    event = 'VimEnter',
+    config = function()
+      local db = require 'dashboard'
 
+      local header_ascii = {
+        '',
+        '                             ▄▄▄▄',
+        '                     ██      ▀▀██',
+        '██▄████  ▄▄█████▄  ███████     ██',
+        '██▀      ██▄▄▄▄ ▀    ██        ██',
+        '██        ▀▀▀▀██▄    ██        ██',
+        '   ██       █▄▄▄▄▄██    ██▄▄▄     ██▄▄▄',
+        '   ▀▀        ▀▀▀▀▀▀      ▀▀▀▀      ▀▀▀▀',
+        '',
+      }
+      -- calculate vertical padding
+      local function center_header(h, c, f)
+        local total_lines = #h + #c + #f
+        local padding = math.floor((vim.o.lines - total_lines) / 2)
+        local pad_lines = {}
+        for _ = 1, padding do
+          table.insert(pad_lines, '')
+        end
+        -- prepend padding to header
+        return vim.list_extend(pad_lines, h)
+      end
+
+      db.setup {
+        theme = 'doom',
+        config = {
+          header = center_header(header_ascii, {
+            { icon = '  ', desc = 'New file', key = 'e', action = 'enew | setlocal bufhidden=hide' },
+            { icon = '  ', desc = 'Find file', key = 'f', action = 'Telescope find_files' },
+            { icon = '  ', desc = 'Recent files', key = 'r', action = "lua require('telescope.builtin').oldfiles({ cwd_only = true })" },
+            { icon = '  ', desc = 'Config', key = 'c', action = 'edit ~/.config/nvim/init.lua' },
+            { icon = '  ', desc = 'Quit', key = 'q', action = 'qa' },
+          }, { 'no mouse. no mercy.' }),
+
+          center = {
+            {
+              icon = '  ',
+              desc = 'New file',
+              key = 'e',
+              action = 'enew',
+            },
+            {
+              icon = '  ',
+              desc = 'Find file',
+              key = 'f',
+              action = 'Telescope find_files',
+            },
+            {
+              icon = '  ',
+              desc = 'Recent files',
+              key = 'r',
+              action = 'Telescope oldfiles',
+            },
+            {
+              icon = '  ',
+              desc = 'Config',
+              key = 'c',
+              action = 'edit ~/.config/nvim/init.lua',
+            },
+            {
+              icon = '  ',
+              desc = 'Quit',
+              key = 'q',
+              action = 'qa',
+            },
+          },
+
+          footer = {
+            '',
+            'no mouse. no mercy.',
+          },
+        },
+      }
+    end,
+  },
   -- Alternatively, use `config = function() ... end` for full control over the configuration.
   -- If you prefer to call `setup` explicitly, use:
   --    {
