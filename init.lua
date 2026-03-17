@@ -145,7 +145,8 @@ vim.api.nvim_create_autocmd('TextYankPost', {
 })
 
 vim.cmd [[
-cnoreabbrev <expr> db getcmdtype() == ":" && getcmdline() == "db" ? "Dashboard" : "db"
+  cnoreabbrev <expr> db getcmdtype() == ":" && getcmdline() == "db" ? "Dashboard" : "db"
+  cnoreabbrev <expr> config getcmdtype() == ":" && getcmdline() == "config" ? "e ~/.config/nvim/init.lua" : "config"
 ]]
 
 -- [[ Install `lazy.nvim` plugin manager ]]
