@@ -145,7 +145,7 @@ vim.api.nvim_create_autocmd('TextYankPost', {
 })
 
 vim.cmd [[
-  cnoreabbrev db Dashboard
+cnoreabbrev <expr> db getcmdtype() == ":" && getcmdline() == "db" ? "Dashboard" : "db"
 ]]
 
 -- [[ Install `lazy.nvim` plugin manager ]]
