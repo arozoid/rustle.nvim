@@ -2,7 +2,7 @@
 
 ## introduction
 
-my personal fork of [https://nvim-lua/kickstart.nvim/](kickstart.nvim), a starting point for creating your own neovim configuration
+my personal fork of [kickstart.nvim](https://nvim-lua/kickstart.nvim/), a starting point for creating your own neovim configuration
 
 ## installation
 
