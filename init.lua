@@ -1,7 +1,7 @@
 -- Set <space> as the leader key
 -- See `:help mapleader`
 --  NOTE: Must happen before plugins are loaded (otherwise wrong leader will be used)
-vim.g.mapleader = ' '
+vim.g.mapleader = ','
 vim.g.maplocalleader = ' '
 
 -- Set to true if you have a Nerd Font installed and selected in the terminal
@@ -144,6 +144,7 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   callback = function() vim.hl.on_yank() end,
 })
 
+-- Custom commands
 vim.cmd [[
   cnoreabbrev <expr> db getcmdtype() == ":" && getcmdline() == "db" ? "Dashboard" : "db"
   cnoreabbrev <expr> config getcmdtype() == ":" && getcmdline() == "config" ? "e ~/.config/nvim/init.lua" : "config"
@@ -203,7 +204,11 @@ require('lazy').setup({
       }
     end,
   },
-  { 'tpope/vim-surround' },
+  {
+    'kylechui/nvim-surround',
+    version = '*',
+    config = function() require('nvim-surround').setup {} end,
+  },
   {
     'andyg/leap.nvim',
     url = 'https://codeberg.org/andyg/leap.nvim',
@@ -217,13 +222,9 @@ require('lazy').setup({
       -- modern mappings (Sneak-style)
       local map = vim.keymap.set
 
-      -- normal mode jumps
-      map('n', 's', function() leap.leap {} end, { desc = 'Leap to any 2-char target' })
-      map('n', 'S', function()
-        leap.leap {
-          target_windows = vim.tbl_filter(function(win) return vim.api.nvim_win_get_config(win).zindex == nil end, vim.api.nvim_tabpage_list_wins(0)),
-        }
-      end, { desc = 'Leap across windows' })
+      -- keymaps (avoid conflicts with surround)
+      vim.keymap.set({ 'n', 'x', 'o' }, 'gs', function() leap.leap { target_windows = { vim.fn.win_getid() } } end)
+      vim.keymap.set({ 'n', 'x', 'o' }, 'gS', function() leap.leap { target_windows = { vim.fn.win_getid() }, backward = true } end)
 
       require('leap').opts.highlight_unlabeled_phase_one_targets = true
       require('leap').opts.case_sensitive = false
