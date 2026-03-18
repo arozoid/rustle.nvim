@@ -205,6 +205,7 @@ require('lazy').setup({
   },
   { 'tpope/vim-surround' },
   {
+    'andyg/leap.nvim',
     url = 'https://codeberg.org/andyg/leap.nvim',
     event = 'VeryLazy',
     config = function()
