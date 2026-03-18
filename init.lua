@@ -203,6 +203,31 @@ require('lazy').setup({
       }
     end,
   },
+  { 'tpope/vim-surround' },
+  {
+    url = 'https://codeberg.org/andyg/leap.nvim',
+    event = 'VeryLazy',
+    config = function()
+      local leap = require 'leap'
+
+      -- setup leap (empty table is fine)
+      leap.setup {}
+
+      -- modern mappings (Sneak-style)
+      local map = vim.keymap.set
+
+      -- normal mode jumps
+      map('n', 's', function() leap.leap {} end, { desc = 'Leap to any 2-char target' })
+      map('n', 'S', function()
+        leap.leap {
+          target_windows = vim.tbl_filter(function(win) return vim.api.nvim_win_get_config(win).zindex == nil end, vim.api.nvim_tabpage_list_wins(0)),
+        }
+      end, { desc = 'Leap across windows' })
+
+      require('leap').opts.highlight_unlabeled_phase_one_targets = true
+      require('leap').opts.case_sensitive = false
+    end,
+  },
   {
     'nvim-telescope/telescope.nvim',
     version = '*',
