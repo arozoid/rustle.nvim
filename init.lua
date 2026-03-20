@@ -53,6 +53,15 @@ vim.o.timeoutlen = 300
 vim.o.splitright = true
 vim.o.splitbelow = true
 
+-- fix double backspace
+vim.keymap.set('i', '<C-h>', '<BS>', { noremap = true })
+
+-- ignore DEL if it's duplicated
+vim.keymap.set('i', '<Del>', '<Nop>', { noremap = true })
+
+-- fix double enter
+vim.keymap.set('i', '<CR>', function() return '\n' end, { expr = true })
+
 -- Sets how neovim will display certain whitespace characters in the editor.
 --  See `:help 'list'`
 --  and `:help 'listchars'`
@@ -148,6 +157,8 @@ vim.api.nvim_create_autocmd('TextYankPost', {
 vim.cmd [[
   cnoreabbrev <expr> db getcmdtype() == ":" && getcmdline() == "db" ? "Dashboard" : "db"
   cnoreabbrev <expr> config getcmdtype() == ":" && getcmdline() == "config" ? "e ~/.config/nvim/init.lua" : "config"
+  hi Normal guibg=NONE
+  hi NormalNC guibg=NONE
 ]]
 
 -- [[ Install `lazy.nvim` plugin manager ]]
@@ -847,6 +858,7 @@ require('lazy').setup({
     config = function()
       ---@diagnostic disable-next-line: missing-fields
       require('tokyonight').setup {
+        dim_inactive = false,
         styles = {
           comments = { italic = false }, -- Disable italics in comments
         },
