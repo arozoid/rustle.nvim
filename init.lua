@@ -259,6 +259,22 @@ require('lazy').setup({
     config = function()
       local db = require 'dashboard'
 
+      -- rstl.sway foresty palette for the dashboard
+      local forest = {
+        header = '#76a882',
+        icon = '#62856b',
+        desc = '#c8d5cb',
+        key = '#8fbea2',
+        shortcut = '#76a882',
+        footer = '#62856b',
+      }
+      vim.api.nvim_set_hl(0, 'DashboardHeader', { fg = forest.header })
+      vim.api.nvim_set_hl(0, 'DashboardIcon', { fg = forest.icon })
+      vim.api.nvim_set_hl(0, 'DashboardDesc', { fg = forest.desc })
+      vim.api.nvim_set_hl(0, 'DashboardKey', { fg = forest.key, bold = true })
+      vim.api.nvim_set_hl(0, 'DashboardShortCut', { fg = forest.shortcut })
+      vim.api.nvim_set_hl(0, 'DashboardFooter', { fg = forest.footer })
+
       local header_ascii = {
         '',
         '                             ▄▄▄▄',
