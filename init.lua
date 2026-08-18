@@ -229,19 +229,15 @@ require('lazy').setup({
     event = 'VeryLazy',
     config = function()
       local leap = require 'leap'
-
-      -- setup leap (empty table is fine)
       leap.setup {}
+      leap.opts.highlight_unlabeled_phase_one_targets = true
+      leap.opts.case_sensitive = false
 
-      -- modern mappings (Sneak-style)
-      local map = vim.keymap.set
+      leap.opts.labels = 'abcdefghijklmnopqrstuvwxyz'
+      leap.opts.safe_labels = 'abcdefghijklmnopqrstuvwxyz'
 
-      -- keymaps (avoid conflicts with surround)
-      vim.keymap.set({ 'n', 'x', 'o' }, 'gs', function() leap.leap { target_windows = { vim.fn.win_getid() } } end)
-      vim.keymap.set({ 'n', 'x', 'o' }, 'gS', function() leap.leap { target_windows = { vim.fn.win_getid() }, backward = true } end)
-
-      require('leap').opts.highlight_unlabeled_phase_one_targets = true
-      require('leap').opts.case_sensitive = false
+      vim.keymap.set({ 'n', 'x', 'o' }, 'f', function() leap.leap { target_windows = { vim.fn.win_getid() } } end)
+      vim.keymap.set({ 'n', 'x', 'o' }, 'F', function() leap.leap { target_windows = { vim.fn.win_getid() }, backward = true } end)
     end,
   },
   {
