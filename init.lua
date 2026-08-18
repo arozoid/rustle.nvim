@@ -229,19 +229,15 @@ require('lazy').setup({
     event = 'VeryLazy',
     config = function()
       local leap = require 'leap'
-
-      -- setup leap (empty table is fine)
       leap.setup {}
+      leap.opts.highlight_unlabeled_phase_one_targets = true
+      leap.opts.case_sensitive = false
 
-      -- modern mappings (Sneak-style)
-      local map = vim.keymap.set
+      leap.opts.labels = 'abcdefghijklmnopqrstuvwxyz'
+      leap.opts.safe_labels = 'abcdefghijklmnopqrstuvwxyz'
 
-      -- keymaps (avoid conflicts with surround)
-      vim.keymap.set({ 'n', 'x', 'o' }, 'gs', function() leap.leap { target_windows = { vim.fn.win_getid() } } end)
-      vim.keymap.set({ 'n', 'x', 'o' }, 'gS', function() leap.leap { target_windows = { vim.fn.win_getid() }, backward = true } end)
-
-      require('leap').opts.highlight_unlabeled_phase_one_targets = true
-      require('leap').opts.case_sensitive = false
+      vim.keymap.set({ 'n', 'x', 'o' }, 'f', function() leap.leap { target_windows = { vim.fn.win_getid() } } end)
+      vim.keymap.set({ 'n', 'x', 'o' }, 'F', function() leap.leap { target_windows = { vim.fn.win_getid() }, backward = true } end)
     end,
   },
   {
@@ -258,6 +254,22 @@ require('lazy').setup({
     event = 'VimEnter',
     config = function()
       local db = require 'dashboard'
+
+      -- rstl.sway foresty palette for the dashboard
+      local forest = {
+        header = '#76a882',
+        icon = '#62856b',
+        desc = '#c8d5cb',
+        key = '#8fbea2',
+        shortcut = '#76a882',
+        footer = '#62856b',
+      }
+      vim.api.nvim_set_hl(0, 'DashboardHeader', { fg = forest.header })
+      vim.api.nvim_set_hl(0, 'DashboardIcon', { fg = forest.icon })
+      vim.api.nvim_set_hl(0, 'DashboardDesc', { fg = forest.desc })
+      vim.api.nvim_set_hl(0, 'DashboardKey', { fg = forest.key, bold = true })
+      vim.api.nvim_set_hl(0, 'DashboardShortCut', { fg = forest.shortcut })
+      vim.api.nvim_set_hl(0, 'DashboardFooter', { fg = forest.footer })
 
       local header_ascii = {
         '',
