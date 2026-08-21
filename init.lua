@@ -4,6 +4,12 @@
 vim.g.mapleader = ','
 vim.g.maplocalleader = ' '
 
+-- Fuzzy search for command mode
+vim.opt.wildmenu = true
+vim.opt.wildmode = 'longest:full,full'
+vim.opt.wildoptions = 'fuzzy'
+vim.opt.path:append '**'
+
 -- Set to true if you have a Nerd Font installed and selected in the terminal
 vim.g.have_nerd_font = true
 
@@ -863,6 +869,9 @@ require('lazy').setup({
     },
   },
 
+  -- Charcoal nvim theme
+  { 'bluz71/vim-moonfly-colors', name = 'moonfly', lazy = false, priority = 1000 },
+
   -- Highlight todo, notes, etc in comments
   {
     'folke/todo-comments.nvim',
@@ -990,6 +999,10 @@ require('lazy').setup({
     },
   },
 })
+
+-- Setting theme
+vim.opt.termguicolors = true
+vim.cmd.colorscheme 'moonfly'
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
