@@ -87,8 +87,8 @@ start neovim
 nvim
 ```
 
-that's it! lazy will install all the plugins you have. use `:Lazy` to view
-the current plugin status. hit `q` to close the window.
+that's it! vim.pack will install all the plugins you have. use `:lua print(vim.inspect(vim.pack.get()))`
+to view the current plugin status, or `:lua vim.pack.update()` to update.
 
 #### read the friendly documentation
 
@@ -122,7 +122,8 @@ examples of adding popularly requested plugins.
     `~/.local/share/nvim-kickstart`. you can apply this approach to any neovim
     distribution that you would like to try out.
 * what if i want to "uninstall" this configuration:
-  * see [lazy.nvim uninstall](https://lazy.folke.io/usage#-uninstalling) information
+  * delete this repository's clone and remove the Neovim data files in
+    `~/.local/share/nvim/` (plugins live in `~/.local/share/nvim/site/pack/core/opt`)
 
 ### install recipes
 
