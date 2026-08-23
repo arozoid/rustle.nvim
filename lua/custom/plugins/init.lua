@@ -42,7 +42,7 @@ vim.api.nvim_create_autocmd('PackChanged', {
 -- There is no dependency resolution: list plugins before their dependents.
 -- Plugins load eagerly at startup (like `lazy = false`); there is no built-in
 -- lazy-loading. All of these were effectively eager under lazy.nvim anyway.
-vim.pack.add({
+vim.pack.add {
   -- Telescope stack
   gh 'nvim-lua/plenary.nvim',
   gh 'nvim-telescope/telescope-fzf-native.nvim',
@@ -90,7 +90,10 @@ vim.pack.add({
 
   -- Highlight, edit, and navigate code
   { src = gh 'nvim-treesitter/nvim-treesitter', version = 'main' },
-})
+
+  -- Discord rich presence
+  gh 'vyfor/cord.nvim',
+}
 
 if vim.g.have_nerd_font then
   -- Useful for getting pretty icons, but requires a Nerd Font
@@ -644,10 +647,7 @@ do
 
   -- Install any missing parsers (e.g. on first run); refresh existing ones with `:TSUpdate`
   local parser_dir = vim.fs.joinpath(vim.fn.stdpath 'data', 'site', 'parser')
-  local missing = vim
-    .iter(parsers)
-    :filter(function(lang) return not vim.uv.fs_stat(vim.fs.joinpath(parser_dir, lang .. '.so')) end)
-    :totable()
+  local missing = vim.iter(parsers):filter(function(lang) return not vim.uv.fs_stat(vim.fs.joinpath(parser_dir, lang .. '.so')) end):totable()
   if #missing > 0 then require('nvim-treesitter').install(missing) end
 
   vim.api.nvim_create_autocmd('FileType', {
@@ -672,5 +672,25 @@ do
     end,
   })
 end
+
+-- Cord.nvim settings
+require('cord').setup {
+  display = {
+    view = 'asset',
+    theme = 'minecraft',
+    flavor = 'accent', -- dark/light/accent
+  },
+
+  hooks = {
+    post_activity = function(opts, activity)
+      activity.status_display_type = 'details' -- 'name' | 'details' | 'state'
+    end,
+  },
+
+  --  idle = {
+  --    enabled = true,
+  --    timeout = 300,
+  --  },
+}
 
 -- vim: ts=2 sts=2 sw=2 et
