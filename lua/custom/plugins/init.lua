@@ -81,13 +81,6 @@ vim.pack.add {
   -- By default, we use the Lua implementation instead, so no build step is needed.
   { src = gh 'saghen/blink.cmp', version = vim.version.range '1' },
 
-  -- nvim-cmp family
-  gh 'hrsh7th/cmp-nvim-lsp',
-  gh 'hrsh7th/cmp-buffer',
-  gh 'hrsh7th/cmp-path',
-  gh 'hrsh7th/cmp-cmdline',
-  gh 'hrsh7th/nvim-cmp',
-
   -- Highlight, edit, and navigate code
   { src = gh 'nvim-treesitter/nvim-treesitter', version = 'main' },
 
@@ -507,7 +500,7 @@ require('blink.cmp').setup {
   },
 
   sources = {
-    default = { 'lsp', 'path', 'snippets' },
+    default = { 'lsp', 'path', 'snippets', 'buffer' },
   },
 
   snippets = { preset = 'luasnip' },
@@ -517,22 +510,6 @@ require('blink.cmp').setup {
 
   -- Shows a signature help window while you type arguments for a function
   signature = { enabled = true },
-}
-
--- nvim-cmp
-local cmp = require 'cmp'
-cmp.setup {
-  completion = { completeopt = 'menu,menuone,noselect' },
-  mapping = cmp.mapping.preset.insert {
-    ['<C-n>'] = cmp.mapping.select_next_item(),
-    ['<C-p>'] = cmp.mapping.select_prev_item(),
-    ['<CR>'] = cmp.mapping.confirm { select = true },
-  },
-  sources = cmp.config.sources {
-    { name = 'nvim_lsp' },
-    { name = 'buffer' },
-    { name = 'path' },
-  },
 }
 
 -- [[ Fuzzy Finder (files, lsp, etc) ]]
