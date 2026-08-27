@@ -118,12 +118,18 @@ require('nvim-surround').setup {}
 
 do
   local leap = require 'leap'
-  leap.setup {}
-  leap.opts.highlight_unlabeled_phase_one_targets = true
-  leap.opts.case_sensitive = false
-
-  leap.opts.labels = 'abcdefghijklmnopqrstuvwxyz'
-  leap.opts.safe_labels = 'abcdefghijklmnopqrstuvwxyz'
+  leap.setup {
+    case_sensitive = false,
+    labels = 'abcdefghijklmnopqrstuvwxyz',
+    safe_labels = 'acfgmnpqrstuz',
+    on_beacons = function(targets)
+      for _, t in ipairs(targets) do
+        if not t.label and not t.beacon and t.chars and t.is_previewable ~= false then
+          t.beacon = { 0, { virt_text = { { table.concat(t.chars), 'LeapMatch' } } } }
+        end
+      end
+    end,
+  }
 
   vim.keymap.set({ 'n', 'x', 'o' }, 'f', function() leap.leap { target_windows = { vim.fn.win_getid() } } end)
   vim.keymap.set({ 'n', 'x', 'o' }, 'F', function() leap.leap { target_windows = { vim.fn.win_getid() }, backward = true } end)
