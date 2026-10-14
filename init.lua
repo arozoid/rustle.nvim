@@ -221,3 +221,69 @@ for _, p in ipairs(plugins) do
   end
   vim.cmd('packadd ' .. p.dir)
 end
+
+-- Dashboard (restore green theme)
+do
+  local db = require 'dashboard'
+
+  local forest = {
+    header = '#76a882',
+    icon = '#62856b',
+    desc = '#c8d5cb',
+    key = '#8fbea2',
+    shortcut = '#76a882',
+    footer = '#62856b',
+  }
+  vim.api.nvim_set_hl(0, 'DashboardHeader', { fg = forest.header })
+  vim.api.nvim_set_hl(0, 'DashboardIcon', { fg = forest.icon })
+  vim.api.nvim_set_hl(0, 'DashboardDesc', { fg = forest.desc })
+  vim.api.nvim_set_hl(0, 'DashboardKey', { fg = forest.key, bold = true })
+  vim.api.nvim_set_hl(0, 'DashboardShortCut', { fg = forest.shortcut })
+  vim.api.nvim_set_hl(0, 'DashboardFooter', { fg = forest.footer })
+
+  local header_ascii = {
+    '',
+    '                             ▄▄▄▄',
+    '                     ██      ▀▀██',
+    '██▄████  ▄▄█████▄  ███████     ██',
+    '██▀      ██▄▄▄▄ ▀    ██        ██',
+    '██        ▀▀▀▀██▄    ██        ██',
+    '   ██       █▄▄▄▄▄██    ██▄▄▄     ██▄▄▄',
+    '   ▀▀        ▀▀▀▀▀▀      ▀▀▀▀      ▀▀▀▀',
+    '',
+  }
+
+  local function vertical_center(header, center, footer)
+    local total_lines = #header + #center + #footer
+    local top_padding = math.floor((vim.o.lines - total_lines) / 2)
+    local padded_header = {}
+    for _ = 1, top_padding do
+      table.insert(padded_header, '')
+    end
+    for _, line in ipairs(header) do
+      table.insert(padded_header, line)
+    end
+    return padded_header
+  end
+
+  local center_text = {
+    { icon = '  ', desc = 'new file', key = 'e', action = 'enew' },
+    { icon = '  ', desc = 'find file', key = 'f', action = 'Telescope find_files' },
+    { icon = '  ', desc = 'recent files', key = 'r', action = 'Telescope oldfiles' },
+    { icon = '  ', desc = 'find word', key = 'w', action = 'Telescope grep_string' },
+    { icon = '  ', desc = 'live grep', key = 'g', action = 'Telescope live_grep' },
+    { icon = '  ', desc = 'config', key = 'c', action = 'edit ~/.config/nvim/init.lua' },
+    { icon = '  ', desc = 'quit', key = 'q', action = 'qa' },
+  }
+
+  local footer_text = { '', 'no mouse. no mercy.' }
+
+  db.setup {
+    theme = 'doom',
+    config = {
+      header = vertical_center(header_ascii, center_text, footer_text),
+      center = center_text,
+      footer = footer_text,
+    },
+  }
+end
