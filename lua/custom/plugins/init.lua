@@ -3,8 +3,4 @@
 --
 -- See the kickstart.nvim README for more information
 
----@module 'lazy'
----@type LazySpec
-return {
-  { 'bluz71/vim-moonfly-colors', name = 'moonfly', priority = 1000, lazy = false },
-}
+return {}

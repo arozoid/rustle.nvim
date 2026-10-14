@@ -165,30 +165,62 @@ vim.cmd [[
   hi NormalNC guibg=NONE
 ]]
 
--- [[ Install `lazy.nvim` plugin manager ]]
---    See `:help lazy.nvim.txt` or https://github.com/folke/lazy.nvim for more info
-local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
-if not (vim.uv or vim.loop).fs_stat(lazypath) then
-  local lazyrepo = 'https://github.com/folke/lazy.nvim.git'
-  local out = vim.fn.system { 'git', 'clone', '--filter=blob:none', '--branch=stable', lazyrepo, lazypath }
-  if vim.v.shell_error ~= 0 then error('Error cloning lazy.nvim:\n' .. out) end
-end
----@type vim.Option
-local rtp = vim.opt.rtp
-rtp:prepend(lazypath)
+-- [[ Install plugins with vim.pack.add (Neovim 0.11+) ]]
+-- Use the native package manager. Packpath under data/site/pack/core/opt or start.
 
--- [[ Configure and install plugins ]]
---
---  To check the current status of your plugins, run
---    :Lazy
---
---  You can press `?` in this menu for help. Use `:q` to close the window
---
---  To update plugins you can run
---    :Lazy update
---
--- NOTE: Here is where you install your plugins.
-require('lazy').setup({
+local packpath = vim.fn.stdpath('data') .. '/site/pack/core/opt'
+vim.fn.mkdir(packpath, 'p')
+
+-- Moonfly colorscheme: ensure it's available
+local moonfly_dir = packpath .. '/vim-moonfly-colors'
+if vim.fn.isdirectory(moonfly_dir) == 0 then
+  vim.fn.system({'git', 'clone', 'https://github.com/bluz71/vim-moonfly-colors', moonfly_dir})
+end
+vim.cmd('packadd vim-moonfly-colors')
+
+-- Define plugins with vim.pack.add (we'll load them as needed by calling packadd or
+-- let autocommands/events handle; for simple cases we can also add to start if preferred)
+-- Build minimal: add required plugins
+
+local plugins = {
+  {dir = 'guess-indent.nvim', url = 'https://github.com/NMAC427/guess-indent.nvim'},
+  {dir = 'vim-commentary', url = 'https://github.com/tpope/vim-commentary'},
+  {dir = 'nvim-lspconfig', url = 'https://github.com/neovim/nvim-lspconfig'},
+  {dir = 'cmp-nvim-lsp', url = 'https://github.com/hrsh7th/cmp-nvim-lsp'},
+  {dir = 'cmp-buffer', url = 'https://github.com/hrsh7th/cmp-buffer'},
+  {dir = 'cmp-path', url = 'https://github.com/hrsh7th/cmp-path'},
+  {dir = 'cmp-cmdline', url = 'https://github.com/hrsh7th/cmp-cmdline'},
+  {dir = 'LuaSnip', url = 'https://github.com/L3MON4D3/LuaSnip'},
+  {dir = 'nvim-cmp', url = 'https://github.com/hrsh7th/nvim-cmp'},
+  {dir = 'nvim-surround', url = 'https://github.com/kylechui/nvim-surround'},
+  {dir = 'leap.nvim', url = 'https://codeberg.org/andyg/leap.nvim'},
+  {dir = 'plenary.nvim', url = 'https://github.com/nvim-lua/plenary.nvim'},
+  {dir = 'telescope-fzf-native.nvim', url = 'https://github.com/nvim-telescope/telescope-fzf-native.nvim'},
+  {dir = 'telescope.nvim', url = 'https://github.com/nvim-telescope/telescope.nvim'},
+  {dir = 'dashboard-nvim', url = 'https://github.com/nvimdev/dashboard-nvim'},
+  {dir = 'gitsigns.nvim', url = 'https://github.com/lewis6991/gitsigns.nvim'},
+  {dir = 'which-key.nvim', url = 'https://github.com/folke/which-key.nvim'},
+  {dir = 'telescope-ui-select.nvim', url = 'https://github.com/nvim-telescope/telescope-ui-select.nvim'},
+  {dir = 'nvim-web-devicons', url = 'https://github.com/nvim-tree/nvim-web-devicons'},
+  {dir = 'mason.nvim', url = 'https://github.com/mason-org/mason.nvim'},
+  {dir = 'mason-lspconfig.nvim', url = 'https://github.com/mason-org/mason-lspconfig.nvim'},
+  {dir = 'mason-tool-installer.nvim', url = 'https://github.com/WhoIsSethDaniel/mason-tool-installer.nvim'},
+  {dir = 'fidget.nvim', url = 'https://github.com/j-hui/fidget.nvim'},
+  {dir = 'conform.nvim', url = 'https://github.com/stevearc/conform.nvim'},
+  {dir = 'blink.cmp', url = 'https://github.com/saghen/blink.cmp'},
+  {dir = 'friendly-snippets', url = 'https://github.com/rafamadriz/friendly-snippets'},
+  {dir = 'todo-comments.nvim', url = 'https://github.com/folke/todo-comments.nvim'},
+  {dir = 'mini.nvim', url = 'https://github.com/nvim-mini/mini.nvim'},
+  {dir = 'nvim-treesitter', url = 'https://github.com/nvim-treesitter/nvim-treesitter'},
+}
+
+for _, p in ipairs(plugins) do
+  local d = packpath .. '/' .. p.dir
+  if vim.fn.isdirectory(d) == 0 then
+    vim.fn.system({'git', 'clone', p.url, d})
+  end
+  vim.cmd('packadd ' .. p.dir)
+end
   -- NOTE: Plugins can be added via a link or github org/name. To run setup automatically, use `opts = {}`
   { 'NMAC427/guess-indent.nvim', opts = {} },
   { 'tpope/vim-commentary', event = 'VeryLazy' },
@@ -244,15 +276,6 @@ require('lazy').setup({
       require('leap').opts.highlight_unlabeled_phase_one_targets = true
       require('leap').opts.case_sensitive = false
     end,
-  },
-  {
-    'nvim-telescope/telescope.nvim',
-    version = '*',
-    dependencies = {
-      'nvim-lua/plenary.nvim',
-      -- optional but recommended
-      { 'nvim-telescope/telescope-fzf-native.nvim', build = 'make' },
-    },
   },
   {
     'nvimdev/dashboard-nvim',
@@ -968,33 +991,7 @@ require('lazy').setup({
   --    This is the easiest way to modularize your config.
   --
   --  Uncomment the following line and add your plugins to `lua/custom/plugins/*.lua` to get going.
-  -- { import = 'custom.plugins' },
-  --
-  -- For additional information with loading, sourcing and examples see `:help lazy.nvim-🔌-plugin-spec`
-  -- Or use telescope!
-  -- In normal mode type `<space>sh` then write `lazy.nvim-plugin`
-  -- you can continue same window with `<space>sr` which resumes last telescope search
-}, { ---@diagnostic disable-line: missing-fields
-  ui = {
-    -- If you are using a Nerd Font: set icons to an empty table which will use the
-    -- default lazy.nvim defined Nerd Font icons, otherwise define a unicode icons table
-    icons = vim.g.have_nerd_font and {} or {
-      cmd = '⌘',
-      config = '🛠',
-      event = '📅',
-      ft = '📂',
-      init = '⚙',
-      keys = '🗝',
-      plugin = '🔌',
-      runtime = '💻',
-      require = '🌙',
-      source = '📄',
-      start = '🚀',
-      task = '📌',
-      lazy = '💤 ',
-    },
-  },
-})
+
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
