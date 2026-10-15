@@ -223,7 +223,7 @@ for _, p in ipairs(plugins) do
   vim.cmd('packadd ' .. p.dir)
 end
 
--- Dashboard (restore green theme)
+-- Dashboard (restore dark green theme)
 do
   local db = require 'dashboard'
 
@@ -235,12 +235,12 @@ do
     shortcut = '#76a882',
     footer = '#62856b',
   }
-  vim.api.nvim_set_hl(0, 'DashboardHeader', { fg = forest.header })
-  vim.api.nvim_set_hl(0, 'DashboardIcon', { fg = forest.icon })
-  vim.api.nvim_set_hl(0, 'DashboardDesc', { fg = forest.desc })
-  vim.api.nvim_set_hl(0, 'DashboardKey', { fg = forest.key, bold = true })
-  vim.api.nvim_set_hl(0, 'DashboardShortCut', { fg = forest.shortcut })
-  vim.api.nvim_set_hl(0, 'DashboardFooter', { fg = forest.footer })
+  vim.api.nvim_set_hl(0, 'DashboardHeader', { fg = forest.header, guibg='#1a1a1a' })
+  vim.api.nvim_set_hl(0, 'DashboardIcon', { fg = forest.icon, guibg='#1a1a1a' })
+  vim.api.nvim_set_hl(0, 'DashboardDesc', { fg = forest.desc, guibg='#1a1a1a' })
+  vim.api.nvim_set_hl(0, 'DashboardKey', { fg = forest.key, guibg='#1a1a1a', bold=true })
+  vim.api.nvim_set_hl(0, 'DashboardShortCut', { fg = forest.shortcut, guibg='#1a1a1a' })
+  vim.api.nvim_set_hl(0, 'DashboardFooter', { fg = forest.footer, guibg='#1a1a1a' })
 
   local header_ascii = {
     '',
