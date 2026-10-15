@@ -268,13 +268,13 @@ do
   end
 
   local center_text = {
-    { icon = '  ', desc = 'new file', key = 'e', action = 'enew' },
-    { icon = '  ', desc = 'find file', key = 'f', action = 'Telescope find_files' },
-    { icon = '  ', desc = 'recent files', key = 'r', action = 'Telescope oldfiles' },
-    { icon = '  ', desc = 'find word', key = 'w', action = 'Telescope grep_string' },
-    { icon = '  ', desc = 'live grep', key = 'g', action = 'Telescope live_grep' },
-    { icon = '  ', desc = 'config', key = 'c', action = 'edit ~/.config/nvim/init.lua' },
-    { icon = '  ', desc = 'quit', key = 'q', action = 'qa' },
+    { icon = '󰈔  ', desc = 'new file', key = 'e', action = 'enew' },
+    { icon = '󰈞  ', desc = 'find file', key = 'f', action = 'Telescope find_files' },
+    { icon = '󱔘  ', desc = 'recent files', key = 'r', action = 'Telescope oldfiles' },
+    { icon = '󰍉  ', desc = 'find word', key = 'w', action = 'Telescope grep_string' },
+    { icon = '  ', desc = 'live grep', key = 'g', action = 'Telescope live_grep' },
+    { icon = '  ', desc = 'config', key = 'c', action = 'edit ~/.config/nvim/init.lua' },
+    { icon = '  ', desc = 'quit', key = 'q', action = 'qa' },
   }
 
   local footer_text = { '', 'no mouse. no mercy.' }
