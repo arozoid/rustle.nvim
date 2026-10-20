@@ -168,8 +168,20 @@ local function plugin_dir(p)
   return packpath .. '/' .. p.dir
 end
 
+-- The two plugins used directly by this file need a real checkout, not just a
+-- directory left behind by an interrupted clone.
+local plugin_markers = {
+  ['vim-moonfly-colors'] = 'colors/moonfly.vim',
+  ['dashboard-nvim'] = 'plugin/dashboard.lua',
+}
+
 local function plugin_installed(p)
-  return vim.fn.isdirectory(plugin_dir(p)) == 1
+  local dir = plugin_dir(p)
+  if vim.fn.isdirectory(dir) == 0 then
+    return false
+  end
+  local marker = plugin_markers[p.dir]
+  return marker == nil or vim.fn.filereadable(dir .. '/' .. marker) == 1
 end
 
 -- Custom commands
@@ -281,8 +293,11 @@ local function install_missing_plugins(list)
       local p = list[next_index]
       next_index = next_index + 1
       local dir = plugin_dir(p)
-      if vim.fn.isdirectory(dir) == 0 then
+      if not plugin_installed(p) then
         active = active + 1
+        if vim.fn.isdirectory(dir) == 1 then
+          vim.fn.delete(dir, 'rf')
+        end
         local cmd = {
           'git', '-c', 'http.lowSpeedLimit=1000', '-c', 'http.lowSpeedTime=30',
           'clone', '--depth=1', p.url, dir,
