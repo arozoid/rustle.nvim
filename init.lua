@@ -193,6 +193,7 @@ vim.cmd [[
 -- Define plugins with the native package layout. Add missing ones lazily.
 local plugins = {
   {dir = 'vim-moonfly-colors', url = 'https://github.com/bluz71/vim-moonfly-colors'},
+  {dir = 'dashboard-nvim', url = 'https://github.com/nvimdev/dashboard-nvim'},
   {dir = 'guess-indent.nvim', url = 'https://github.com/NMAC427/guess-indent.nvim'},
   {dir = 'vim-commentary', url = 'https://github.com/tpope/vim-commentary'},
   {dir = 'nvim-lspconfig', url = 'https://github.com/neovim/nvim-lspconfig'},
@@ -207,7 +208,6 @@ local plugins = {
   {dir = 'plenary.nvim', url = 'https://github.com/nvim-lua/plenary.nvim'},
   {dir = 'telescope-fzf-native.nvim', url = 'https://github.com/nvim-telescope/telescope-fzf-native.nvim'},
   {dir = 'telescope.nvim', url = 'https://github.com/nvim-telescope/telescope.nvim'},
-  {dir = 'dashboard-nvim', url = 'https://github.com/nvimdev/dashboard-nvim'},
   {dir = 'gitsigns.nvim', url = 'https://github.com/lewis6991/gitsigns.nvim'},
   {dir = 'which-key.nvim', url = 'https://github.com/folke/which-key.nvim'},
   {dir = 'telescope-ui-select.nvim', url = 'https://github.com/nvim-telescope/telescope-ui-select.nvim'},
@@ -249,10 +249,29 @@ vim.cmd [[
   hi NormalNC guibg=#000000 guifg=NONE
 ]]
 
--- Keep :db useful while dashboard-nvim is still being installed.
+-- Keep :db useful while dashboard-nvim is still being installed. A blank
+-- buffer is not a useful answer, so show the current plugin state instead.
+local function show_plugin_status(title)
+  local buf = vim.api.nvim_create_buf(false, true)
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, {
+    '',
+    '  ' .. title,
+    '',
+    '  Neovim plugins are still being installed in the background.',
+    '  Wait for the "plugins installed" message, then restart Neovim.',
+    '',
+    '  :RstlInstallPlugins   retry missing plugins',
+    '  :messages             show installation errors',
+  })
+  vim.bo[buf].bufhidden = 'wipe'
+  vim.bo[buf].modifiable = false
+  vim.bo[buf].swapfile = false
+  vim.api.nvim_win_set_buf(0, buf)
+end
+
 if vim.fn.exists(':Dashboard') == 0 then
   vim.api.nvim_create_user_command('Dashboard', function()
-    vim.notify('dashboard-nvim is not installed yet; restart after the background install finishes', vim.log.levels.WARN)
+    show_plugin_status('dashboard-nvim is not installed yet.')
   end, { desc = 'Dashboard (not installed yet)' })
 end
 
@@ -345,6 +364,10 @@ vim.api.nvim_create_user_command('RstlInstallPlugins', function()
 end, { desc = 'Install missing Neovim plugins in the background' })
 
 install_missing_plugins(missing)
+
+if not plugin_installed({ dir = 'dashboard-nvim' }) and vim.fn.argc() == 0 then
+  show_plugin_status('dashboard-nvim is not installed yet.')
+end
 
 -- Dashboard (restore dark green theme)
 do
