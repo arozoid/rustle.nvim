@@ -180,6 +180,10 @@ local function plugin_installed(p)
   if vim.fn.isdirectory(dir) == 0 then
     return false
   end
+  if p.tag then
+    local tag = vim.fn.system({ 'git', '-C', dir, 'describe', '--tags', '--exact-match' })
+    return vim.v.shell_error == 0 and vim.trim(tag) == p.tag
+  end
   local marker = plugin_markers[p.dir]
   return marker == nil or vim.fn.filereadable(dir .. '/' .. marker) == 1
 end
@@ -217,7 +221,9 @@ local plugins = {
   {dir = 'mason-tool-installer.nvim', url = 'https://github.com/WhoIsSethDaniel/mason-tool-installer.nvim'},
   {dir = 'fidget.nvim', url = 'https://github.com/j-hui/fidget.nvim'},
   {dir = 'conform.nvim', url = 'https://github.com/stevearc/conform.nvim'},
-  {dir = 'blink.cmp', url = 'https://github.com/saghen/blink.cmp'},
+  -- blink.cmp v2 requires the separate `blink.lib` package; stay on v1 so a
+  -- fresh install works without extra system packages.
+  {dir = 'blink.cmp', url = 'https://github.com/saghen/blink.cmp', tag = 'v1.10.2'},
   {dir = 'friendly-snippets', url = 'https://github.com/rafamadriz/friendly-snippets'},
   {dir = 'todo-comments.nvim', url = 'https://github.com/folke/todo-comments.nvim'},
   {dir = 'mini.nvim', url = 'https://github.com/nvim-mini/mini.nvim'},
@@ -319,8 +325,15 @@ local function install_missing_plugins(list)
         end
         local cmd = {
           'git', '-c', 'http.lowSpeedLimit=1000', '-c', 'http.lowSpeedTime=30',
-          'clone', '--depth=1', p.url, dir,
+          'clone',
         }
+        if p.tag then
+          table.insert(cmd, '--branch')
+          table.insert(cmd, p.tag)
+        end
+        table.insert(cmd, '--depth=1')
+        table.insert(cmd, p.url)
+        table.insert(cmd, dir)
         if vim.fn.executable('timeout') == 1 then
           table.insert(cmd, 1, '60')
           table.insert(cmd, 1, 'timeout')
