@@ -158,32 +158,18 @@ vim.api.nvim_create_autocmd('TextYankPost', {
 })
 
 -- [[ Plugin install path ]]
--- Use the native package layout. Moonfly is installed before anything asks for
--- it: on a fresh machine `colorscheme moonfly` would otherwise abort the whole
--- config before the clone had a chance to run.
+-- Plugins live in Neovim's native pack directory. Startup only loads what is
+-- already on disk; anything missing is cloned in the background below, so a
+-- slow or offline network cannot freeze the editor.
 local packpath = vim.fn.stdpath('data') .. '/site/pack/core/opt'
 vim.fn.mkdir(packpath, 'p')
 
-local function plugin_file(dir, marker)
-  return vim.fn.filereadable(dir .. '/' .. marker) == 1
+local function plugin_dir(p)
+  return packpath .. '/' .. p.dir
 end
 
-local moonfly_dir = packpath .. '/vim-moonfly-colors'
-if not plugin_file(moonfly_dir, 'colors/moonfly.vim') then
-  vim.fn.delete(moonfly_dir, 'rf')
-  vim.fn.system({
-    'git', 'clone', '--depth=1',
-    'https://github.com/bluz71/vim-moonfly-colors',
-    moonfly_dir,
-  })
-end
-if plugin_file(moonfly_dir, 'colors/moonfly.vim') then
-  vim.cmd('packadd vim-moonfly-colors')
-  if not pcall(vim.cmd, 'colorscheme moonfly') then
-    vim.notify('moonfly colorscheme failed to load', vim.log.levels.WARN)
-  end
-else
-  vim.notify('moonfly colorscheme is unavailable; check git/network and restart', vim.log.levels.WARN)
+local function plugin_installed(p)
+  return vim.fn.isdirectory(plugin_dir(p)) == 1
 end
 
 -- Custom commands
@@ -191,16 +177,10 @@ vim.cmd [[
   cnoreabbrev <expr> db getcmdtype() == ":" && getcmdline() == "db" ? "Dashboard" : "db"
   cnoreabbrev <expr> config getcmdtype() == ":" && getcmdline() == "config" ? "e ~/.config/nvim/init.lua" : "config"
 ]]
-vim.cmd [[
-  hi Normal guibg=#000000 guifg=NONE
-  hi NormalNC guibg=#000000 guifg=NONE
-]]
 
--- Define plugins with vim.pack.add (we'll load them as needed by calling packadd or
--- let autocommands/events handle; for simple cases we can also add to start if preferred)
--- Build minimal: add required plugins
-
+-- Define plugins with the native package layout. Add missing ones lazily.
 local plugins = {
+  {dir = 'vim-moonfly-colors', url = 'https://github.com/bluz71/vim-moonfly-colors'},
   {dir = 'guess-indent.nvim', url = 'https://github.com/NMAC427/guess-indent.nvim'},
   {dir = 'vim-commentary', url = 'https://github.com/tpope/vim-commentary'},
   {dir = 'nvim-lspconfig', url = 'https://github.com/neovim/nvim-lspconfig'},
@@ -232,19 +212,130 @@ local plugins = {
   {dir = 'nvim-treesitter', url = 'https://github.com/nvim-treesitter/nvim-treesitter'},
 }
 
+local missing = {}
 for _, p in ipairs(plugins) do
-  local d = packpath .. '/' .. p.dir
-  if vim.fn.isdirectory(d) == 0 then
-    vim.fn.system({'git', 'clone', p.url, d})
+  if plugin_installed(p) then
+    pcall(vim.cmd, 'packadd ' .. p.dir)
+  else
+    missing[#missing + 1] = p
   end
-  vim.cmd('packadd ' .. p.dir)
 end
+
+-- Moonfly must exist before `colorscheme moonfly` is attempted.
+if plugin_installed({ dir = 'vim-moonfly-colors' })
+  and vim.fn.filereadable(packpath .. '/vim-moonfly-colors/colors/moonfly.vim') == 1
+then
+  if not pcall(vim.cmd, 'colorscheme moonfly') then
+    vim.notify('moonfly colorscheme failed to load', vim.log.levels.WARN)
+  end
+else
+  vim.notify('moonfly is not installed yet; plugins are being fetched in the background', vim.log.levels.WARN)
+end
+
+vim.cmd [[
+  hi Normal guibg=#000000 guifg=NONE
+  hi NormalNC guibg=#000000 guifg=NONE
+]]
+
+-- Keep :db useful while dashboard-nvim is still being installed.
+if vim.fn.exists(':Dashboard') == 0 then
+  vim.api.nvim_create_user_command('Dashboard', function()
+    vim.notify('dashboard-nvim is not installed yet; restart after the background install finishes', vim.log.levels.WARN)
+  end, { desc = 'Dashboard (not installed yet)' })
+end
+
+-- Fetch missing plugins without blocking the UI. Four clones run at a time;
+-- each is capped by `timeout` and Git's low-speed settings when available.
+local function install_missing_plugins(list)
+  if #list == 0 or vim.g.rstl_plugins_installing then
+    return
+  end
+  vim.g.rstl_plugins_installing = true
+
+  local active = 0
+  local failed = 0
+  local next_index = 1
+  local pending = #list
+  local max_active = 4
+  local pump
+
+  local function finish()
+    active = active - 1
+    pending = pending - 1
+    if pending == 0 then
+      vim.g.rstl_plugins_installing = false
+      vim.schedule(function()
+        if failed > 0 then
+          vim.notify(('Neovim plugins: %d failed; run :RstlInstallPlugins to retry'):format(failed), vim.log.levels.WARN)
+        else
+          vim.notify('Neovim plugins installed; restart Neovim to use them', vim.log.levels.INFO)
+        end
+      end)
+      return
+    end
+    pump()
+  end
+
+  pump = function()
+    while active < max_active and next_index <= #list do
+      local p = list[next_index]
+      next_index = next_index + 1
+      local dir = plugin_dir(p)
+      if vim.fn.isdirectory(dir) == 0 then
+        active = active + 1
+        local cmd = {
+          'git', '-c', 'http.lowSpeedLimit=1000', '-c', 'http.lowSpeedTime=30',
+          'clone', '--depth=1', p.url, dir,
+        }
+        if vim.fn.executable('timeout') == 1 then
+          table.insert(cmd, 1, '60')
+          table.insert(cmd, 1, 'timeout')
+        end
+        local ok = pcall(vim.system, cmd, {
+          text = true,
+          env = { GIT_TERMINAL_PROMPT = '0' },
+        }, function(obj)
+          if obj.code ~= 0 then
+            failed = failed + 1
+            vim.fn.delete(dir, 'rf')
+          end
+          finish()
+        end)
+        if not ok then
+          failed = failed + 1
+          finish()
+        end
+      else
+        pending = pending - 1
+      end
+    end
+  end
+
+  pump()
+  vim.notify(('Fetching %d missing Neovim plugins in the background; restart when done'):format(#list), vim.log.levels.INFO)
+end
+
+vim.api.nvim_create_user_command('RstlInstallPlugins', function()
+  local list = {}
+  for _, p in ipairs(plugins) do
+    if not plugin_installed(p) then
+      list[#list + 1] = p
+    end
+  end
+  if #list == 0 then
+    vim.notify('All Neovim plugins are installed', vim.log.levels.INFO)
+  else
+    install_missing_plugins(list)
+  end
+end, { desc = 'Install missing Neovim plugins in the background' })
+
+install_missing_plugins(missing)
 
 -- Dashboard (restore dark green theme)
 do
-  local db = require 'dashboard'
-
-  local forest = {
+  local ok, db = pcall(require, 'dashboard')
+  if ok then
+    local forest = {
     header = '#76a882',
     icon = '#62856b',
     desc = '#c8d5cb',
@@ -296,12 +387,13 @@ do
 
   local footer_text = { '', 'no mouse. no mercy.' }
 
-  db.setup {
-    theme = 'doom',
-    config = {
-      header = vertical_center(header_ascii, center_text, footer_text),
-      center = center_text,
-      footer = footer_text,
-    },
-  }
+    db.setup {
+      theme = 'doom',
+      config = {
+        header = vertical_center(header_ascii, center_text, footer_text),
+        center = center_text,
+        footer = footer_text,
+      },
+    }
+  end
 end
